@@ -3,6 +3,8 @@
 
 #include <QDialog>
 #include <zlib.h>
+#include <QProxyStyle>
+class QPalette;
 class QString;
 class QStringList;
 class QLabel;
@@ -33,6 +35,7 @@ public slots:
 private:
     QStringList m_pathToFiles;
     QString m_nameOfFile;
+    QString m_operationResult;
 
     QLabel *m_pStatusLbl;
     QLabel *m_pPathToFileLbl;
@@ -44,6 +47,16 @@ private:
 
     QListWidget *m_filesLstWgt;
     QThread *m_pThread;
+};
+
+class newStyle : public QProxyStyle
+{
+    Q_OBJECT
+
+public:
+    newStyle();
+
+    void polish(QPalette& pal)Q_DECL_OVERRIDE;
 };
 
 #endif // SWFTOHTML5_H

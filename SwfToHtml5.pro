@@ -14,3 +14,6 @@ SOURCES += \
 
 HEADERS += \
     swftohtml5.h
+
+RESOURCES += \
+    res.qrc

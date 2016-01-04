@@ -16,9 +16,17 @@
 #include <QThread>
 #include <QEventLoop>
 #include <QDataStream>
+#include <QStringList>
+#include <QPalette>
+#include <QStyleFactory>
+#include <QApplication>
+
+static int cnt = 0;
 
 SwfToHtml5::SwfToHtml5(QWidget *parent) : QDialog(parent)
 {
+    this->setWindowIcon(QIcon(":/images/images/icon.png"));
+    QApplication::setStyle(new newStyle);
     setWindowFlags(windowFlags()|Qt::WindowMaximizeButtonHint | Qt::WindowMinimizeButtonHint);
     resize(400, 300);
     m_pStatusLbl = new QLabel(tr("Select the adobe flash files (*.swf)"), this);
@@ -50,10 +58,13 @@ void SwfToHtml5::loadFile()
 {
     m_pathToFiles = QFileDialog::getOpenFileNames(this,
                                                   QObject::tr("Open adobe flash file"),
-                                                  "e:/",
+                                                  QCoreApplication::applicationDirPath(),
                                                   QObject::tr("swf files (*.swf)"));
     if (m_pathToFiles.isEmpty())
         return;
+    //remove dublicats
+    m_pathToFiles.removeDuplicates();
+    m_filesLstWgt->clear();
     m_filesLstWgt->addItems(m_pathToFiles);
     m_pBeginConvertBtn->setEnabled(true);
 }
@@ -66,7 +77,6 @@ void SwfToHtml5::process()
         return;
 
     for (int i = 0; i < m_pathToFiles.size(); ++i) {
-
         if (QFileInfo(m_pathToFiles.at(i)).isFile()) {
             QFile inputFile(m_pathToFiles.at(i));
             QByteArray bufBa;
@@ -130,11 +140,16 @@ void SwfToHtml5::process()
                 qDebug() << "json.txt not open";
             reply->deleteLater();
         }
+        ++cnt;
     }
+    m_pLoadFileBtn->setText("Load files");
+    m_pLoadFileBtn->setEnabled(true);
+    m_filesLstWgt->addItem("Finished!");
 }
 
 void SwfToHtml5::parseJSON(QJsonObject jsonObject)
 {
+    m_operationResult.append(jsonObject["result"].toObject()["response"].toObject()["status"].toString());
     QByteArray jsonData;
     jsonData.append(jsonObject["result"].toObject()["response"].toObject()["output"].toString());
     jsonData = jsonData.replace("-", "+");
@@ -150,15 +165,13 @@ void SwfToHtml5::parseJSON(QJsonObject jsonObject)
     html5File.close();
     m_nameOfFile.clear();
     qDebug() << "parseJSON " + m_nameOfFile + " finished.";
-    m_pLoadFileBtn->setText("Load files");
-    m_pLoadFileBtn->setEnabled(true);
 
-    QString textFrLstWgt;
-    for(int i = 0; i < m_filesLstWgt->count(); ++i)
-    {
-        QListWidgetItem* item = m_filesLstWgt->item(i);
-
-    }
+    QListWidgetItem *lstItem = m_filesLstWgt->item(cnt);
+    QString data;
+    data = lstItem->text();
+    data += " " + m_operationResult;
+    lstItem->setText(data);
+    m_operationResult.clear();
 }
 
 //http://stackoverflow.com/questions/2690328/qt-quncompress-gzip-data/24949005#24949005
@@ -251,4 +264,27 @@ bool SwfToHtml5::gzipDecompress(QByteArray input, QByteArray &output)
 SwfToHtml5::~SwfToHtml5()
 {
 
+}
+
+
+newStyle::newStyle() : QProxyStyle(QStyleFactory::create("Fusion"))
+{
+
+}
+
+void newStyle::polish(QPalette &darkPalette)
+{
+    darkPalette.setColor(QPalette::Window, QColor(53,53,53));
+    darkPalette.setColor(QPalette::WindowText, Qt::white);
+    darkPalette.setColor(QPalette::Base, QColor(25,25,25));
+    darkPalette.setColor(QPalette::AlternateBase, QColor(53,53,53));
+    darkPalette.setColor(QPalette::ToolTipBase, Qt::white);
+    darkPalette.setColor(QPalette::ToolTipText, Qt::white);
+    darkPalette.setColor(QPalette::Text, Qt::white);
+    darkPalette.setColor(QPalette::Button, QColor(0,102,0));
+    darkPalette.setColor(QPalette::ButtonText, Qt::white);
+    darkPalette.setColor(QPalette::BrightText, Qt::red);
+    darkPalette.setColor(QPalette::Link, QColor(42, 130, 218));
+    darkPalette.setColor(QPalette::Highlight, QColor(42, 130, 218));
+    darkPalette.setColor(QPalette::HighlightedText, Qt::black);
 }
