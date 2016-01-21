@@ -4,6 +4,8 @@
 #include <QDialog>
 #include <zlib.h>
 #include <QProxyStyle>
+#include <QSettings>
+
 class QPalette;
 class QString;
 class QStringList;
@@ -26,6 +28,11 @@ public:
     void parseJSON(QJsonObject);
     bool gzipDecompress(QByteArray input, QByteArray &output);
 
+    void readsettings();
+    void writesettings();
+
+    void closeEvent(QCloseEvent *);
+
     ~SwfToHtml5();
 
 public slots:
@@ -33,6 +40,9 @@ public slots:
     void process();
 
 private:
+    QSettings m_settings;
+    QString m_filesPath;
+
     QStringList m_pathToFiles;
     QString m_nameOfFile;
     QString m_operationResult;

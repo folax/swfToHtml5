@@ -23,7 +23,7 @@
 
 static int cnt = 0;
 
-SwfToHtml5::SwfToHtml5(QWidget *parent) : QDialog(parent)
+SwfToHtml5::SwfToHtml5(QWidget *parent) : QDialog(parent), m_settings("Decay", "SwfToHtml5 parser")
 {
     this->setWindowIcon(QIcon(":/images/images/icon.png"));
     QApplication::setStyle(new newStyle);
@@ -52,13 +52,14 @@ SwfToHtml5::SwfToHtml5(QWidget *parent) : QDialog(parent)
     connect(m_pLoadFileBtn, &QPushButton::clicked, this, &SwfToHtml5::loadFile);
     connect(m_pCloseBtn, &QPushButton::clicked, this, &SwfToHtml5::close);
     connect(m_pBeginConvertBtn, &QPushButton::clicked, this, &SwfToHtml5::process);
+    readsettings();
 }
 
 void SwfToHtml5::loadFile()
 {
     m_pathToFiles = QFileDialog::getOpenFileNames(this,
                                                   QObject::tr("Open adobe flash file"),
-                                                  QCoreApplication::applicationDirPath(),
+                                                  m_filesPath,
                                                   QObject::tr("swf files (*.swf)"));
     if (m_pathToFiles.isEmpty())
         return;
@@ -259,6 +260,39 @@ bool SwfToHtml5::gzipDecompress(QByteArray input, QByteArray &output)
     }
     else
         return(true);
+}
+
+void SwfToHtml5::readsettings()
+{
+    m_settings.beginGroup("/Settings");
+
+    int nWidth = m_settings.value("/width", width()).toInt();
+    int nHeight = m_settings.value("/height", height()).toInt();
+    m_filesPath = m_settings.value("/pathToFile", "c:\\").toString();
+
+    resize(nWidth, nHeight);
+    m_settings.endGroup();
+
+    qDebug() << "Read settings!";
+}
+
+void SwfToHtml5::writesettings()
+{
+    qDebug() << "Write settings!";
+    m_settings.beginGroup("/Settings");
+
+    m_settings.setValue("/width", width());
+    m_settings.setValue("/height", height());
+
+    if (m_pathToFiles.size() > 0)
+        m_settings.setValue("/pathToFile", QFileInfo(m_pathToFiles.at(0)).filePath());
+
+    m_settings.endGroup();
+}
+
+void SwfToHtml5::closeEvent(QCloseEvent *)
+{
+    writesettings();
 }
 
 SwfToHtml5::~SwfToHtml5()
