@@ -57,6 +57,8 @@ SwfToHtml5::SwfToHtml5(QWidget *parent) : QDialog(parent), m_settings("Decay", "
 
 void SwfToHtml5::loadFile()
 {
+    m_pathToFiles.clear();
+    m_filesLstWgt->clear();
     m_pathToFiles = QFileDialog::getOpenFileNames(this,
                                                   QObject::tr("Open adobe flash file"),
                                                   m_filesPath,
@@ -72,6 +74,9 @@ void SwfToHtml5::loadFile()
 
 void SwfToHtml5::process()
 {
+    m_filesLstWgt->clear();
+    m_filesLstWgt->addItems(m_pathToFiles);
+    m_pBeginConvertBtn->setEnabled(false);
     m_pLoadFileBtn->setEnabled(false);
     m_pLoadFileBtn->setText("Convertation started!");
     if (m_pathToFiles.size() < 1)
@@ -105,7 +110,7 @@ void SwfToHtml5::process()
 
             QEventLoop eventLoop;
 
-            request.setHeader(QNetworkRequest::ContentTypeHeader,"www.googleapis.com");
+            request.setHeader(QNetworkRequest::ContentTypeHeader, "www.googleapis.com");
 
             QNetworkAccessManager *manager = new QNetworkAccessManager(this);
 
@@ -143,9 +148,11 @@ void SwfToHtml5::process()
         }
         ++cnt;
     }
+    cnt = 0;
     m_pLoadFileBtn->setText("Load files");
     m_pLoadFileBtn->setEnabled(true);
     m_filesLstWgt->addItem("Finished!");
+    m_pBeginConvertBtn->setEnabled(true);
 }
 
 void SwfToHtml5::parseJSON(QJsonObject jsonObject)
@@ -156,7 +163,6 @@ void SwfToHtml5::parseJSON(QJsonObject jsonObject)
     jsonData = jsonData.replace("-", "+");
     jsonData = jsonData.replace("_", "/");
     jsonData = QByteArray::fromBase64(jsonData);
-
     //decompress
     QByteArray decGzipBa;
     gzipDecompress(jsonData, decGzipBa);
@@ -165,7 +171,6 @@ void SwfToHtml5::parseJSON(QJsonObject jsonObject)
     html5File.write(decGzipBa);
     html5File.close();
     m_nameOfFile.clear();
-    qDebug() << "parseJSON " + m_nameOfFile + " finished.";
 
     QListWidgetItem *lstItem = m_filesLstWgt->item(cnt);
     QString data;
@@ -179,7 +184,6 @@ void SwfToHtml5::parseJSON(QJsonObject jsonObject)
 bool SwfToHtml5::gzipDecompress(QByteArray input, QByteArray &output)
 {
     output.clear();
-
     if(input.length() > 0) {
         z_stream strm;
         strm.zalloc = Z_NULL;
@@ -310,12 +314,12 @@ void newStyle::polish(QPalette &darkPalette)
 {
     darkPalette.setColor(QPalette::Window, QColor(53,53,53));
     darkPalette.setColor(QPalette::WindowText, Qt::white);
-    darkPalette.setColor(QPalette::Base, QColor(25,25,25));
+    darkPalette.setColor(QPalette::Base, QColor(25,25,25)); //listWidget color
     darkPalette.setColor(QPalette::AlternateBase, QColor(53,53,53));
     darkPalette.setColor(QPalette::ToolTipBase, Qt::white);
     darkPalette.setColor(QPalette::ToolTipText, Qt::white);
-    darkPalette.setColor(QPalette::Text, Qt::white);
-    darkPalette.setColor(QPalette::Button, QColor(0,102,0));
+    darkPalette.setColor(QPalette::Text, QColor(216, 224, 240));
+    darkPalette.setColor(QPalette::Button, QColor(4, 90, 135));
     darkPalette.setColor(QPalette::ButtonText, Qt::white);
     darkPalette.setColor(QPalette::BrightText, Qt::red);
     darkPalette.setColor(QPalette::Link, QColor(42, 130, 218));
